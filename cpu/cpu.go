@@ -32,8 +32,6 @@ var FONTSET = [FONTSET_SIZE]uint8{
 }
 
 type CPU struct {
-	ProgramCounter uint16
-
 	// The 4096 bytes of memory.
 	//
 	// Memory Map:
@@ -61,9 +59,12 @@ type CPU struct {
 	// +---------------+= 0x000 (0) Start of Chip-8 RAM
 	Ram [RAM_SIZE]uint8
 
+	ProgramCounter uint16
+
 	StackPointer uint16
 	Stack        [STACK_SIZE]uint16
-	screen       [SCREEN_HEIGHT][SCREEN_WIDTH]bool
+
+	screen [SCREEN_HEIGHT][SCREEN_WIDTH]bool
 
 	// CHIP-8 has 16 8-bit data registers named from V0 to VF. The VF
 	// register doubles as a carry flag.
@@ -107,8 +108,8 @@ func (c *CPU) Tick() (bool, bool, error) {
 }
 
 func (c *CPU) execute(op uint16) error {
-	// TODO
-	return nil
+	err := OpCode(op).Execute(c)
+	return err
 }
 
 func (c *CPU) TickTimers() {
@@ -147,4 +148,8 @@ func (c *CPU) SetKey(num uint8, isPressed bool) {
 
 func (c *CPU) Screen() [SCREEN_HEIGHT][SCREEN_WIDTH]bool {
 	return c.screen
+}
+
+func (cpu *CPU) ClearScreen() {
+	cpu.screen = [SCREEN_HEIGHT][SCREEN_WIDTH]bool{}
 }
