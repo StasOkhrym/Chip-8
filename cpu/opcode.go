@@ -62,7 +62,7 @@ func (op OpCode) Execute(cpu *CPU) error {
 		}
 	case opCode.n1 == 0x5:
 		// Skip next if VX == VY
-		if cpu.VRegisters[opCode.n2] != cpu.VRegisters[opCode.n3] {
+		if cpu.VRegisters[opCode.n2] == cpu.VRegisters[opCode.n3] {
 			cpu.ProgramCounter += 2
 		}
 	case opCode.n1 == 0x6:
@@ -92,6 +92,10 @@ func (op OpCode) Execute(cpu *CPU) error {
 		case 0xE:
 		}
 	case opCode.n1 == 0x9:
+		// Skip if VX != VY
+		if cpu.VRegisters[opCode.n2] != cpu.VRegisters[opCode.n3] {
+			cpu.ProgramCounter += 2
+		}
 	case opCode.n1 == 0xA:
 	case opCode.n1 == 0xB:
 	case opCode.n1 == 0xC:
