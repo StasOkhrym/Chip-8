@@ -57,18 +57,18 @@ type CPU struct {
 	// | Reserved for  |
 	// |  interpreter  |
 	// +---------------+= 0x000 (0) Start of Chip-8 RAM
-	Ram [RAM_SIZE]uint8
+	Memory [RAM_SIZE]uint8
 
 	ProgramCounter uint16
 
 	StackPointer uint16
 	Stack        [STACK_SIZE]uint16
 
-	screen [SCREEN_HEIGHT][SCREEN_WIDTH]bool
+	Screen [SCREEN_HEIGHT][SCREEN_WIDTH]bool
 
 	// CHIP-8 has 16 8-bit data registers named from V0 to VF. The VF
 	// register doubles as a carry flag.
-	Registers [NUM_REGS]uint8
+	VRegisters [NUM_REGS]uint8
 	// The address register, which is named I, is 16 bits wide and is used
 	// with several opcodes that involve memory operations.
 	IndexRegister uint16
@@ -82,17 +82,17 @@ type CPU struct {
 func NewCPU() *CPU {
 	cpu := &CPU{
 		ProgramCounter: START_ADDR,
-		Ram:            [RAM_SIZE]uint8{},
+		Memory:         [RAM_SIZE]uint8{},
 		StackPointer:   0,
 		Stack:          [STACK_SIZE]uint16{},
-		screen:         [SCREEN_HEIGHT][SCREEN_WIDTH]bool{},
-		Registers:      [NUM_REGS]uint8{},
+		Screen:         [SCREEN_HEIGHT][SCREEN_WIDTH]bool{},
+		VRegisters:     [NUM_REGS]uint8{},
 		IndexRegister:  0,
 		Keys:           [NUM_KEYS]bool{false},
 		DelayTimer:     0,
 		SoundTimer:     0,
 	}
-	copy(cpu.Ram[:FONTSET_SIZE], FONTSET[:])
+	copy(cpu.Memory[:FONTSET_SIZE], FONTSET[:])
 
 	return cpu
 }
@@ -108,8 +108,8 @@ func (c *CPU) Tick() (bool, bool, error) {
 	return false, c.shouldBeep(), err
 }
 
-func (c *CPU) execute(op uint16) error {
-	err := OpCode(op).Execute(c)
+func (c *CPU) execute(op OpCode) error {
+	err := op.Execute(c)
 	return err
 }
 
@@ -126,11 +126,12 @@ func (c *CPU) shouldBeep() bool {
 	return c.SoundTimer == 1
 }
 
-func (c *CPU) GetOpCode() uint16 {
-	high_byte := c.Ram[c.ProgramCounter]
-	low_byte := c.Ram[c.ProgramCounter+1]
+func (c *CPU) GetOpCode() OpCode {
+	high_byte := c.Memory[c.ProgramCounter]
+	low_byte := c.Memory[c.ProgramCounter+1]
 	c.ProgramCounter += 2
-	return (uint16(high_byte) << 8) | uint16(low_byte)
+	code := (uint16(high_byte) << 8) | uint16(low_byte)
+	return OpCode(code)
 }
 
 func (c *CPU) Push(val uint16) {
@@ -147,10 +148,6 @@ func (c *CPU) SetKey(num uint8, isPressed bool) {
 	c.Keys[num] = isPressed
 }
 
-func (c *CPU) Screen() [SCREEN_HEIGHT][SCREEN_WIDTH]bool {
-	return c.screen
-}
-
 func (cpu *CPU) ClearScreen() {
-	cpu.screen = [SCREEN_HEIGHT][SCREEN_WIDTH]bool{}
+	cpu.Screen = [SCREEN_HEIGHT][SCREEN_WIDTH]bool{}
 }

@@ -110,11 +110,9 @@ func (c *Chip8) Draw() {
 	c.renderer.SetDrawColor(255, 0, 0, 255)
 	c.renderer.Clear()
 
-	vector := c.cpu.Screen()
-
-	for j := 0; j < len(vector); j++ {
-		for i := 0; i < len(vector[j]); i++ {
-			if vector[j][i] {
+	for j := 0; j < len(c.cpu.Screen); j++ {
+		for i := 0; i < len(c.cpu.Screen[j]); i++ {
+			if c.cpu.Screen[j][i] {
 				c.renderer.SetDrawColor(255, 255, 0, 255)
 			} else {
 				c.renderer.SetDrawColor(255, 0, 0, 255)
@@ -160,7 +158,7 @@ func (c *Chip8) LoadProgram(fileName string) error {
 	if statErr != nil {
 		return statErr
 	}
-	if int64(len(c.cpu.Ram)-cpu.START_ADDR) < stat.Size() {
+	if int64(len(c.cpu.Memory)-cpu.START_ADDR) < stat.Size() {
 		return fmt.Errorf("ROM file size is too big")
 	}
 
@@ -169,6 +167,6 @@ func (c *Chip8) LoadProgram(fileName string) error {
 		return readErr
 	}
 
-	copy(c.cpu.Ram[cpu.START_ADDR:], buffer)
+	copy(c.cpu.Memory[cpu.START_ADDR:], buffer)
 	return nil
 }
