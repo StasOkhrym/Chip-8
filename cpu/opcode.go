@@ -27,15 +27,78 @@ func (op OpCode) Decode() OpCodeParts {
 }
 
 func (op OpCode) Execute(cpu *CPU) error {
-	parts := op.Decode()
+	opCode := op.Decode()
 
-	switch parts {
-	case OpCodeParts{0x0, 0x0, 0x0, 0x0}:
-		// NOOP
-		break
-	case OpCodeParts{0x0, 0x0, 0xE, 0x0}:
-		// Clear Screen
-		cpu.ClearScreen()
+	switch {
+	case opCode.n1 == 0x0:
+		switch {
+		case opCode.n2 == 0x0 && opCode.n3 == 0x0 && opCode.n4 == 0x0:
+			// NOOP
+			break
+		case opCode.n2 == 0x0 && opCode.n3 == 0xE && opCode.n4 == 0x0:
+			// Clear Screen
+			cpu.ClearScreen()
+		case opCode.n2 == 0x0 && opCode.n3 == 0xE && opCode.n4 == 0xE:
+			// Return from subroutine
+			cpu.ProgramCounter = cpu.Pop()
+		default:
+			fmt.Printf("Invalid opcode %X\n", op)
+		}
+	case opCode.n1 == 0x1:
+		// Jump to NNN
+		cpu.ProgramCounter = uint16(op) & 0x0FFF
+	case opCode.n1 == 0x2:
+		// Call subroutine
+		cpu.Push(uint16(op) & 0x0FFF)
+	case opCode.n1 == 0x3:
+		// Skip next if VX == NN
+		if cpu.Registers[opCode.n2] == opCode.n3+opCode.n4 {
+			cpu.ProgramCounter += 2
+		}
+	case opCode.n1 == 0x4:
+		// Skip next if VX != NN
+		if cpu.Registers[opCode.n2] != opCode.n3+opCode.n4 {
+			cpu.ProgramCounter += 2
+		}
+	case opCode.n1 == 0x5:
+		// Skip next if VX == VY
+		if cpu.Registers[opCode.n2] != cpu.Registers[opCode.n3] {
+			cpu.ProgramCounter += 2
+		}
+	case opCode.n1 == 0x6:
+		// Set VX = NN
+		cpu.Registers[opCode.n2] = opCode.n3 + opCode.n4
+	case opCode.n1 == 0x7:
+		// Set VX += NN
+		cpu.Registers[opCode.n2] += opCode.n3 + opCode.n4
+	case opCode.n1 == 0x8:
+		switch opCode.n4 {
+		case 0x0:
+			// Set VX = VY
+			cpu.Registers[opCode.n2] = cpu.Registers[opCode.n3]
+		case 0x1:
+			// Set VX |= VY
+			cpu.Registers[opCode.n2] |= cpu.Registers[opCode.n3]
+		case 0x2:
+			// Set VX &= VY
+			cpu.Registers[opCode.n2] &= cpu.Registers[opCode.n3]
+		case 0x3:
+			// Set VX ^= VY
+			cpu.Registers[opCode.n2] ^= cpu.Registers[opCode.n3]
+		case 0x4:
+		case 0x5:
+		case 0x6:
+		case 0x7:
+		case 0xE:
+		}
+	case opCode.n1 == 0x9:
+	case opCode.n1 == 0xA:
+	case opCode.n1 == 0xB:
+	case opCode.n1 == 0xC:
+	case opCode.n1 == 0xD:
+	case opCode.n1 == 0xE:
+	case opCode.n1 == 0xF:
+
 	default:
 		return fmt.Errorf("unexpected opcode: 0x%X", op)
 	}

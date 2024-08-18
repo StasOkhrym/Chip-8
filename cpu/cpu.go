@@ -103,6 +103,7 @@ func (c *CPU) Tick() (bool, bool, error) {
 	err := c.execute(op)
 
 	c.TickTimers()
+	c.ProgramCounter += 2
 
 	return false, c.shouldBeep(), err
 }
