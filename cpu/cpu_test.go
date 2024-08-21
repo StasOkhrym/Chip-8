@@ -13,12 +13,12 @@ func TestNewChip(t *testing.T) {
 	cpu := CPU.NewCPU()
 
 	assert.Equal(uint16(CPU.START_ADDR), cpu.ProgramCounter, "ProgramCounter should be set to START_ADDR")
-	assert.Equal(uint8(0x00), cpu.Ram[CPU.START_ADDR], "Initial RAM value at START_ADDR should be 0")
+	assert.Equal(uint8(0x00), cpu.Memory[CPU.START_ADDR], "Initial RAM value at START_ADDR should be 0")
 	assert.Equal(uint16(0), cpu.StackPointer, "StackPointer should be initialized to 0")
-	assert.Equal([CPU.SCREEN_HEIGHT][CPU.SCREEN_WIDTH]bool{}, cpu.Screen(), "Screen should be cleared")
+	assert.Equal([CPU.SCREEN_HEIGHT][CPU.SCREEN_WIDTH]bool{}, cpu.Screen, "Screen should be cleared")
 
 	for i := 0; i < CPU.FONTSET_SIZE; i++ {
-		assert.Equal(CPU.FONTSET[i], cpu.Ram[i], "FONTSET should be correctly loaded into RAM")
+		assert.Equal(CPU.FONTSET[i], cpu.Memory[i], "FONTSET should be correctly loaded into RAM")
 	}
 }
 
@@ -48,8 +48,8 @@ func TestGetOpCode(t *testing.T) {
 
 	cpu := CPU.NewCPU()
 
-	cpu.Ram[cpu.ProgramCounter] = 0xAB
-	cpu.Ram[cpu.ProgramCounter+1] = 0xCD
+	cpu.Memory[cpu.ProgramCounter] = 0xAB
+	cpu.Memory[cpu.ProgramCounter+1] = 0xCD
 
 	opcode := cpu.GetOpCode()
 

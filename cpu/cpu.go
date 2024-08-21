@@ -1,5 +1,10 @@
 package cpu
 
+import (
+	"fmt"
+	"os"
+)
+
 const RAM_SIZE = 4096
 const NUM_REGS = 16
 const STACK_SIZE = 16
@@ -77,6 +82,8 @@ type CPU struct {
 
 	DelayTimer uint8
 	SoundTimer uint8
+
+	shouldDraw bool
 }
 
 func NewCPU() *CPU {
@@ -91,6 +98,7 @@ func NewCPU() *CPU {
 		Keys:           [NUM_KEYS]bool{false},
 		DelayTimer:     0,
 		SoundTimer:     0,
+		shouldDraw:     false,
 	}
 	copy(cpu.Memory[:FONTSET_SIZE], FONTSET[:])
 
@@ -99,18 +107,23 @@ func NewCPU() *CPU {
 
 func (c *CPU) Tick() (bool, bool, error) {
 	op := c.GetOpCode()
-
-	err := c.execute(op)
+	count, err := c.execute(op)
 
 	c.TickTimers()
-	c.ProgramCounter += 2
 
-	return false, c.shouldBeep(), err
+	if count {
+		c.ProgramCounter += 2
+	}
+	return c.shouldDraw, c.shouldBeep(), err
 }
 
-func (c *CPU) execute(op OpCode) error {
-	err := op.Execute(c)
-	return err
+func (c *CPU) execute(op OpCode) (bool, error) {
+	count, err := op.Execute(c)
+	if err != nil {
+		fmt.Printf("Error executing opcode: %v\n", err)
+	}
+
+	return count, err
 }
 
 func (c *CPU) TickTimers() {
@@ -126,22 +139,31 @@ func (c *CPU) shouldBeep() bool {
 	return c.SoundTimer == 1
 }
 
-func (c *CPU) GetOpCode() OpCode {
-	high_byte := c.Memory[c.ProgramCounter]
-	low_byte := c.Memory[c.ProgramCounter+1]
-	c.ProgramCounter += 2
-	code := (uint16(high_byte) << 8) | uint16(low_byte)
-	return OpCode(code)
-}
-
 func (c *CPU) Push(val uint16) {
+	if c.StackPointer >= STACK_SIZE {
+		panic("Stack overflow: attempt to push onto a full stack")
+	}
 	c.Stack[c.StackPointer] = val
 	c.StackPointer += 1
 }
 
 func (c *CPU) Pop() uint16 {
+	if c.StackPointer == 0 {
+		panic("Stack underflow: attempt to pop from an empty stack")
+	}
 	c.StackPointer -= 1
 	return c.Stack[c.StackPointer]
+}
+
+func (c *CPU) GetOpCode() OpCode {
+	if c.ProgramCounter >= RAM_SIZE-1 {
+		fmt.Println("Program ended")
+		os.Exit(0)
+	}
+	high_byte := c.Memory[c.ProgramCounter]
+	low_byte := c.Memory[c.ProgramCounter+1]
+	code := (uint16(high_byte) << 8) | uint16(low_byte)
+	return OpCode(code)
 }
 
 func (c *CPU) SetKey(num uint8, isPressed bool) {
@@ -150,4 +172,5 @@ func (c *CPU) SetKey(num uint8, isPressed bool) {
 
 func (cpu *CPU) ClearScreen() {
 	cpu.Screen = [SCREEN_HEIGHT][SCREEN_WIDTH]bool{}
+	cpu.shouldDraw = true
 }

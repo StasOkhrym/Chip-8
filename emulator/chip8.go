@@ -107,15 +107,15 @@ func (c *Chip8) pollKeyPad() {
 }
 
 func (c *Chip8) Draw() {
-	c.renderer.SetDrawColor(255, 0, 0, 255)
+	c.renderer.SetDrawColor(0, 0, 0, 255)
 	c.renderer.Clear()
 
 	for j := 0; j < len(c.cpu.Screen); j++ {
 		for i := 0; i < len(c.cpu.Screen[j]); i++ {
 			if c.cpu.Screen[j][i] {
-				c.renderer.SetDrawColor(255, 255, 0, 255)
+				c.renderer.SetDrawColor(0, 255, 0, 255)
 			} else {
-				c.renderer.SetDrawColor(255, 0, 0, 255)
+				c.renderer.SetDrawColor(0, 0, 0, 255)
 			}
 			c.renderer.FillRect(
 				&sdl.Rect{

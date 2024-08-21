@@ -45,11 +45,13 @@ func main() {
 
 	c8, err := emulator.InitChip8(fileName, scaleModifier, renderer)
 	if err != nil {
-		panic(err)
+		fmt.Print(err)
+		os.Exit(1)
 	}
 
 	runErr := c8.Run()
 	if runErr != nil {
-		panic(runErr)
+		fmt.Print(runErr)
+		os.Exit(1)
 	}
 }
